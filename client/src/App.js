@@ -19,10 +19,12 @@ function App() {
       const newSocket = io(SOCKET_URL);
       setSocket(newSocket);
 
-      newSocket.on('initialSlide', idx => setSlide(idx));
-      newSocket.on('slideChange', idx => setSlide(idx));
-      newSocket.on('userJoined', guestName => {
-        console.log(`🟢 ${guestName} vient de se connecter`);
+      newSocket.on('connect', () => {
+        console.log('[client] ✅ connecté, socket.id =', newSocket.id);
+      });
+      newSocket.on('slideChange', idx => {
+        console.log('[client] ⬇️ reçu slideChange →', idx);
+        setSlide(idx);
       });
 
       return () => newSocket.disconnect();
@@ -38,12 +40,14 @@ function App() {
 
   const handleNext = () => {
     const next = slide + 1;
+    console.log('[client] ⬆️ emit slideChange →', next);
     setSlide(next);
     socket.emit('slideChange', next);
   };
 
   const handlePrev = () => {
     const prev = Math.max(slide - 1, 0);
+    console.log('[client] ⬆️ emit slideChange →', prev);
     setSlide(prev);
     socket.emit('slideChange', prev);
   };
