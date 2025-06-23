@@ -26,10 +26,11 @@ io.on('connection', socket => {
     io.emit('userJoined', name);
   });
 
-  // Quand le presenter change de diapo
   socket.on('slideChange', slideIndex => {
+    console.log(`[server] ⬆️ reçu slideChange de ${socket.id} → ${slideIndex}`);
     currentSlide = slideIndex;
     socket.broadcast.emit('slideChange', slideIndex);
+    console.log(`[server] 📡 broadcast slideChange → ${slideIndex}`);
   });
 
   socket.on('disconnect', () => {
