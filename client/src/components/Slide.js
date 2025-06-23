@@ -1,12 +1,19 @@
-import React, { useMemo } from 'react';
+import React from 'react';
+
+// Génère une couleur déterministe selon le numéro de slide
+const getColor = slide => {
+  const str = slide.toString();
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return (
+    '#' + (hash & 0xFFFFFF).toString(16).padStart(6, '0')
+  );
+};
 
 const Slide = ({ slide }) => {
-  const bgColor = useMemo(() => {
-    // Génère une couleur aléatoire hexadécimale
-    return '#' + Math.floor(Math.random() * 16777215)
-      .toString(16)
-      .padStart(6, '0');
-  }, [slide]);
+  const bgColor = getColor(slide);
 
   return (
     <div

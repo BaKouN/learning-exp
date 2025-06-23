@@ -13,6 +13,7 @@ function App() {
   const [joined, setJoined] = useState(false);
   const [socket, setSocket] = useState(null);
 
+  // Initialise la connexion WebSocket une seule fois
   useEffect(() => {
     if ((isPresenter || joined) && !socket) {
       const newSocket = io(SOCKET_URL);
@@ -27,6 +28,13 @@ function App() {
       return () => newSocket.disconnect();
     }
   }, [isPresenter, joined, socket]);
+
+  // Envoie l'événement "join" quand la socket est prête
+  useEffect(() => {
+    if (socket && joined) {
+      socket.emit('join', name);
+    }
+  }, [socket, joined, name]);
 
   const handleNext = () => {
     const next = slide + 1;
@@ -44,7 +52,6 @@ function App() {
     e.preventDefault();
     if (!name.trim()) return;
     setJoined(true);
-    socket.emit('join', name);
   };
 
   if (isPresenter) return <PresenterView slide={slide} onPrev={handlePrev} onNext={handleNext} />;
