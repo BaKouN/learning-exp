@@ -1,0 +1,5 @@
+# Ignorer les dossiers de dépendances
+node_modules/
+
+# Ignorer les fichiers d’environnement
+*.env
