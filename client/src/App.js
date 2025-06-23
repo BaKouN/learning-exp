@@ -1,34 +1,55 @@
 import React, { useState, useEffect } from 'react';
 import io from 'socket.io-client';
+import JoinForm from './components/JoinForm';
+import PresenterView from './components/PresenterView';
+import GuestView from './components/GuestView';
 
-const socket = io(process.env.REACT_APP_WS_URL);
+const SOCKET_URL = process.env.REACT_APP_WS_URL;
 
 function App() {
+  const isPresenter = window.location.pathname === '/presenter';
   const [slide, setSlide] = useState(0);
+  const [name, setName] = useState('');
+  const [joined, setJoined] = useState(false);
+  const [socket, setSocket] = useState(null);
 
-  // Écoute des changements de slide émis par les autres
   useEffect(() => {
-    socket.on('slideChange', idx => {
-      setSlide(idx);
-    });
-    return () => {
-      socket.off('slideChange');
-    };
-  }, []);
+    if ((isPresenter || joined) && !socket) {
+      const newSocket = io(SOCKET_URL);
+      setSocket(newSocket);
 
-  // Passe à la slide suivante et notifie les autres
-  const nextSlide = () => {
-    const newSlide = slide + 1;
-    setSlide(newSlide);
-    socket.emit('slideChange', newSlide);
+      newSocket.on('initialSlide', idx => setSlide(idx));
+      newSocket.on('slideChange', idx => setSlide(idx));
+      newSocket.on('userJoined', guestName => {
+        console.log(`🟢 ${guestName} vient de se connecter`);
+      });
+
+      return () => newSocket.disconnect();
+    }
+  }, [isPresenter, joined, socket]);
+
+  const handleNext = () => {
+    const next = slide + 1;
+    setSlide(next);
+    socket.emit('slideChange', next);
   };
 
-  return (
-    <div style={{ textAlign: 'center', marginTop: '2rem' }}>
-      <h1>Diapositive n°{slide}</h1>
-      <button onClick={nextSlide}>Suivante</button>
-    </div>
-  );
+  const handlePrev = () => {
+    const prev = Math.max(slide - 1, 0);
+    setSlide(prev);
+    socket.emit('slideChange', prev);
+  };
+
+  const handleJoin = e => {
+    e.preventDefault();
+    if (!name.trim()) return;
+    setJoined(true);
+    socket.emit('join', name);
+  };
+
+  if (isPresenter) return <PresenterView slide={slide} onPrev={handlePrev} onNext={handleNext} />;
+  if (!joined) return <JoinForm name={name} setName={setName} handleJoin={handleJoin} />;
+  return <GuestView slide={slide} name={name} />;
 }
 
 export default App;

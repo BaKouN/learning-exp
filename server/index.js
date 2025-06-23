@@ -11,13 +11,24 @@ const io = new Server(server, {
   cors: { origin: '*' }
 });
 
-// Quand un client se connecte
+let currentSlide = 0;
+
 io.on('connection', socket => {
   console.log('Client connecté :', socket.id);
 
-  // Réception d'un changement de diapositive
+  // Nouveau client : on lui envoie l'état actuel
+  socket.emit('initialSlide', currentSlide);
+
+  // Quand un guest envoie son nom
+  socket.on('join', name => {
+    console.log(`🔖 ${name} a rejoint la présentation. (${socket.id})`);
+    // optionnel : informer le presenter
+    io.emit('userJoined', name);
+  });
+
+  // Quand le presenter change de diapo
   socket.on('slideChange', slideIndex => {
-    // Réémettre à tous les autres clients
+    currentSlide = slideIndex;
     socket.broadcast.emit('slideChange', slideIndex);
   });
 
